@@ -1,4 +1,4 @@
-from xbeenetwork import SensorNet
+from sensornet import SensorNet
 import logging
 import time
 
@@ -9,20 +9,17 @@ logger.setLevel(logging.DEBUG)
 net = SensorNet('/dev/cu.usbserial-DN018RGN')
 
 
-def stop():
+def safe_mode():
     net.send_data('ROUTER1', [131])
-
 
 
 def move_backwards():
     net.send_data('ROUTER1', [131])
     time.sleep(0.5)
-    net.send_data('ROUTER1', [137,0,0,0,1])
+    net.send_data('ROUTER1', [137, 0, 0, 0, 1])
 
 
 def clean():
-    net.send_data('ROUTER1', [131])
-    time.sleep(0.5)
     net.send_data('ROUTER1', [135])
 
 
