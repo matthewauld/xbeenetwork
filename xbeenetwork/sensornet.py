@@ -3,6 +3,7 @@ import logging
 import sys
 import serial
 import time
+import nodes
 
 
 class SensorNet(object):

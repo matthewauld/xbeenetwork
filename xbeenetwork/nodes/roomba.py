@@ -1,9 +1,9 @@
 """Node attached to Roomba."""
 
-from basenode import BaseNode
+from .basenode import BaseNode
 
 
-class RoobaNode(BaseNode):
+class RoombaNode(BaseNode):
     """Roomba Node class."""
 
     def __init__(self, sensornet, response):
