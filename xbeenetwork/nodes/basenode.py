@@ -3,13 +3,14 @@ The base xbee sensor node.
 
 All other node types must be a modificationof this.
 """
+from datetime import datetime
 from queue import Queue
 
 
 class BaseNode(object):
     """Base Node class."""
 
-    def __init__(self, sensornet, response):
+    def __init__(self, response, sensornet):
         """Initialize node with node discovery dict."""
         self.source_addr = response['parameter']['source_addr']
         self.source_addr_long = response['parameter']['source_addr_long']
@@ -19,5 +20,13 @@ class BaseNode(object):
         self.node_identifier = response['parameter']['node_identifier']
         self.device_type = response['parameter']['device_type']
         self.active = True
+        self.active_time = datetime.now()
         self.data = Queue(1024)
         self.sensornet = sensornet
+
+    def send_data(self, data):
+        """Simple send data request."""
+        self.sensornet.XB.send('tx', dest_addr=self.source_addr,
+                     dest_addr_long=self.source_addr_long, data=bytes(data))
+    def process_data(self,data):
+        pass

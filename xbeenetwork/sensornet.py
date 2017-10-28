@@ -1,51 +1,75 @@
 import xbee
 import logging
-import sys
 import serial
 import time
-import nodes
+from datetime import datetime
+from nodes import *
+import yaml
+import os
+
 
 
 class SensorNet(object):
+    """The main xbee network, connected to xbee coordinator."""
     def __init__(self, port):
+        """Start SensorNet."""
         self._logger = logging.getLogger(__name__)
         self.serial = serial.Serial(port)
-        self.XB = xbee.ZigBee(self.serial, shorthand=True, callback=self.process_packet, escaped=True)
+        self.config = yaml.safe_load(open(os.path.dirname(
+            os.path.realpath(__file__)) + '/' + 'config.yml'))
+        self.XB = xbee.ZigBee(self.serial,
+                              shorthand=True,
+                              callback=self.process_packet, escaped=True)
         self.units = {}
         self.XB.send('at', command='ND'.encode('ascii'))
         time.sleep(3)
 
-    # guide for processing all packets
     def process_packet(self, data):
+        """Sort packet to proper processing function."""
         self._logger.debug("Incoming Packet {}".format(data))
         if data['id'] == 'at_response':
             self.process_at_response(data)
         elif self.units == {}:
-            pass
+            pass                    # Add fucntion to process data with no node
         elif data['id'] == 'rx':
             self.process_rx(data)
 
     def process_at_response(self, data):
-        ''' Function that processes AT repsponse data '''
-
+        """Function that processes AT repsponse data."""
         if data['command'] == b'ND':
-            self.units[data['parameter']
-                       ['node_identifier']] = data['parameter']
+            self._update_node(data)
+
+    def _update_node(self, data):
+        """Create a node if none exists, or update node."""
+        node_name = data['parameter']['node_identifier'].decode('ascii')
+        print(node_name)
+        try:
+            node = self.units[node_name]
+            if node.active:
+                pass         # Add method to verify data in node, call here
+            else:
+                node.active = True
+                node.active_time = datetime.node()
+                self._logger.debug('Node "{0}" reactivated '.format(node_name,))
+
+        except KeyError:
+
+            if node_name in self.config['nodes'].keys():
+
+                node_type = self.config['nodes'][node_name]
+                print(node_type)
+                if node_type == 'Roomba':
+                    print("its a roomba")
+                    node = RoombaNode(data, self)
+                    self.units[node_name] = node
+                    self._logger.info('Node "{0}" registered as "{1}"'.format(node_name, node_type))
+                else:
+                    self._logger.error('Unrecognized node type "{0}" listed in config for {1}'.format(node_type, node_name))
+            else:
+                self.units[node_name] = BaseNode(data, self)
+                self._logger.info('Node "{0}" registered as "BaseNode"'.format(node_name))
 
     def process_rx(self, data):
         """Function that processes RF response data."""
         for byte in data['rf_data']:
             self._logger.debug("Byte: {}".format(byte))
-
-    def send_data(self, unit, data):
-        """Simple send data request.
-
-        First byte is always length of rest of data.
-        Must be in bytes format.
-        """
-        try:
-            unit = unit.encode('ascii')
-        except AttributeError:
-            pass
-        data = [len(data)]+data
-        self.XB.send('tx', dest_addr=self.units[unit]['source_addr'], dest_addr_long=self.units[unit]['source_addr_long'], data=bytes(data))

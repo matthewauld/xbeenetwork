@@ -6,10 +6,20 @@ from .basenode import BaseNode
 class RoombaNode(BaseNode):
     """Roomba Node class."""
 
-    def __init__(self, sensornet, response):
+    def __init__(self, response, sensornet):
         """Initialize node with node discovery dict."""
-        BaseNode.__init__(sensornet, response)
+        BaseNode.__init__(self, response, sensornet)
         self.mode = MODE_OFF
+
+    def send_data(self, data):
+        """Simple send data request.
+
+        First byte is always length of rest of data.
+        Must be in bytes format.
+        """
+        data = [len(data)]+data
+        self.sensornet.XB.send('tx', dest_addr=self.source_addr,
+                     dest_addr_long=self.source_addr_long, data=bytes(data))
 
     def start(self):
         """Set to Passive Mode."""
@@ -22,32 +32,44 @@ class RoombaNode(BaseNode):
         """
         self.mode = mode
 
-        self.sensornet.send_data([mode])
+        self.send_data([mode])
 
     def automation(self, action):
         """Start an automation.
 
         Options: CLEAN, MAX, SPOT, DOCK
         """
-        self.sensornet.send_data([action])
+        self.send_data([action])
 
     def move_forwards(self, mode=131):
         """Move roomba forwards."""
         if mode in [133, 138]:
             self.set_mode(mode)
-        self.sensornet.send_data([137, 0, 50, 0, 0])
+        self.send_data([137, 0, 255, 0, 0])
+
+    def rotate_left(self, mode=131):
+        """Move roomba forwards."""
+        if mode in [133, 138]:
+            self.set_mode(mode)
+        self.send_data([137, 0, 255, 0, 1])
+
+    def rotate_right(self, mode=131):
+        """Move roomba forwards."""
+        if mode in [133, 138]:
+            self.set_mode(mode)
+        self.send_data([137, 0, 255, 255, 255])
 
     def stop(self, mode=131):
         """Stop roomba."""
         if mode in [133, 138]:
             self.set_mode(mode)
-        self.sensornet.send_data([137, 0, 0, 0, 0])
+        self.send_data([137, 0, 0, 0, 0])
 
     def move_backwards(self, mode=131):
         """Move roomba backwards."""
         if mode in [133, 138]:
             self.set_mode(mode)
-        self.sensornet.send_data([137, 255, 206, 0, 0])
+        self.send_data([137, 255, 1, 0, 0])
 
 
 
