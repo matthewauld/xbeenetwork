@@ -93,26 +93,25 @@ void processRxPacket(ZBRxResponse& rx){
 }
 
 void processRoomba(){
-  if (Roomba.available()>0){
+  if (Roomba.available()>0){    // Check to see if there is data available
     AllocBuffer<100> packet;
     ZBTxRequest txRequest;
-    int len;
-    if(Roomba.available()>64){
-      len = 64;
-    }else{
-      len = Roomba.available();
+    uint8_t len;
+    uint8_t start_byte;
+    uint8_t data;
+
+    start_byte = Roomba.read();
+    if(start_byte == 19){      // Check if data is stream packet
+      len = Roomba.read();    // Get the length of the stream packet
+      packet.append<uint8_t>(start_byte);
+      packet.append<uint8_t>(len);
+      for(int i=0; i<len; i++){  // Read the rest of the data
+        data = Roomba.read();
+        packet.append<uint8_t>(data);
+      }
     }
-    for(int i=0; i<Roomba.available(); i++){
-      uint8_t data;
-      data = Roomba.read();
-      packet.append<uint8_t>(data);
     txRequest.setAddress64(0x0000000000000000);
     txRequest.setPayload(packet.head,packet.len());
     xbee.send(txRequest);
-
-    }
-
-
-
   }
 }

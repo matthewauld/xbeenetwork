@@ -6,7 +6,7 @@ from datetime import datetime
 from nodes import *
 import yaml
 import os
-from queue import Queue
+import queue
 
 
 class SensorNet(object):
@@ -44,7 +44,6 @@ class SensorNet(object):
     def _update_node(self, data):
         """Create a node if none exists, or update node."""
         node_name = data['parameter']['node_identifier'].decode('ascii')
-        print(node_name)
         try:
             node = self.units[node_name]
             if node.active:
@@ -59,9 +58,7 @@ class SensorNet(object):
             if node_name in self.config['nodes'].keys():
 
                 node_type = self.config['nodes'][node_name]
-                print(node_type)
                 if node_type == 'Roomba':
-                    print("its a roomba")
                     node = RoombaNode(data, self)
                     self.units[node_name] = node
                     self._logger.info('Node "{0}" registered as "{1}"'.format(node_name, node_type))
@@ -71,8 +68,8 @@ class SensorNet(object):
                 self.units[node_name] = BaseNode(data, self)
                 self._logger.info('Node "{0}" registered as "BaseNode"'.format(node_name))
 
-    def  process_rx(self, data):
-        """Add data to a node's queue."""
+    def process_rx(self, data):
+        """Add data to the main queue for processing."""
         node = None
         addr = data['source_addr']
         for key, item in self.units.items():
