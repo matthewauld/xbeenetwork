@@ -12,6 +12,7 @@ class BaseNode(object):
 
     def __init__(self, response, sensornet):
         """Initialize node with node discovery dict."""
+        self.priority = 10
         self.source_addr = response['parameter']['source_addr']
         self.source_addr_long = response['parameter']['source_addr_long']
         self.parent_address = response['parameter']['parent_address']
@@ -21,7 +22,6 @@ class BaseNode(object):
         self.device_type = response['parameter']['device_type']
         self.active = True
         self.active_time = datetime.now()
-        self.data = Queue(1024)
         self.sensornet = sensornet
 
     def send_data(self, data):

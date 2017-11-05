@@ -6,13 +6,14 @@ from datetime import datetime
 from nodes import *
 import yaml
 import os
-
+from queue import Queue
 
 
 class SensorNet(object):
     """The main xbee network, connected to xbee coordinator."""
     def __init__(self, port):
         """Start SensorNet."""
+        self.packet_queue = queue.PriorityQueue()
         self._logger = logging.getLogger(__name__)
         self.serial = serial.Serial(port)
         self.config = yaml.safe_load(open(os.path.dirname(
@@ -23,6 +24,7 @@ class SensorNet(object):
         self.units = {}
         self.XB.send('at', command='ND'.encode('ascii'))
         time.sleep(3)
+
 
     def process_packet(self, data):
         """Sort packet to proper processing function."""
@@ -69,7 +71,28 @@ class SensorNet(object):
                 self.units[node_name] = BaseNode(data, self)
                 self._logger.info('Node "{0}" registered as "BaseNode"'.format(node_name))
 
-    def process_rx(self, data):
-        """Function that processes RF response data."""
-        for byte in data['rf_data']:
-            self._logger.debug("Byte: {}".format(byte))
+    def  process_rx(self, data):
+        """Add data to a node's queue."""
+        node = None
+        addr = data['source_addr']
+        for key, item in self.units.items():
+            if item.source_addr == addr:
+                node = item
+                node_name = key
+                break
+        if node is None:
+            self._logger.warning("Packet from unknown source {}".format(data))
+        else:
+            self.packet_queue.put(Job(node, data['rf_data']))
+
+
+class Job(object):
+    """Processing packet job to add to queue."""
+
+    def __init__(self, node, data):
+        self.node = node
+        self.data = data
+        priority = node.priority
+
+    def __cmp__(self, other):
+        return cmp(self.priority, other.priority)

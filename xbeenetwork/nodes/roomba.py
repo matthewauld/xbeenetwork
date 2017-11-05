@@ -10,6 +10,7 @@ class RoombaNode(BaseNode):
         """Initialize node with node discovery dict."""
         BaseNode.__init__(self, response, sensornet)
         self.mode = MODE_OFF
+        self.priority = 2
 
     def send_data(self, data):
         """Simple send data request.
@@ -19,7 +20,9 @@ class RoombaNode(BaseNode):
         """
         data = [len(data)]+data
         self.sensornet.XB.send('tx', dest_addr=self.source_addr,
-                     dest_addr_long=self.source_addr_long, data=bytes(data))
+                               dest_addr_long=self.source_addr_long,
+                               data=bytes(data))
+    def process(self,data):
 
     def start(self):
         """Set to Passive Mode."""
