@@ -105,7 +105,7 @@ void processRoomba(){
       len = Roomba.read();    // Get the length of the stream packet
       packet.append<uint8_t>(start_byte);
       packet.append<uint8_t>(len);
-      for(int i=0; i<len; i++){  // Read the rest of the data
+      for(int i=0; i+1 <len; i++){  // Read the rest of the data
         data = Roomba.read();
         packet.append<uint8_t>(data);
       }
