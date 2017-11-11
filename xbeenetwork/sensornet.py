@@ -28,7 +28,7 @@ class SensorNet(object):
 
     def process_packet(self, data):
         """Sort packet to proper processing function."""
-        self._logger.debug("Incoming Packet {}".format(data))
+        #self._logger.debug("Incoming Packet {}".format(data))
         if data['id'] == 'at_response':
             self.process_at_response(data)
         elif self.units == {}:
@@ -80,7 +80,7 @@ class SensorNet(object):
         if node is None:
             self._logger.warning("Packet from unknown source {}".format(data))
         else:
-            self.packet_queue.put(Job(node, data['rf_data']))
+            node.process(data['rf_data'])
 
 
 class Job(object):
@@ -89,7 +89,7 @@ class Job(object):
     def __init__(self, node, data):
         self.node = node
         self.data = data
-        priority = node.priority
+        self.priority = node.priority
 
     def __cmp__(self, other):
         return cmp(self.priority, other.priority)
