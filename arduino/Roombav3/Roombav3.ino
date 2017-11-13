@@ -92,26 +92,54 @@ void processRxPacket(ZBRxResponse& rx){
   }
 }
 
-void processRoomba(){
-  if (Roomba.available()>0){    // Check to see if there is data available
-    AllocBuffer<100> packet;
-    ZBTxRequest txRequest;
-    uint8_t len;
-    uint8_t start_byte;
-    uint8_t data;
 
-    start_byte = Roomba.read();
-    if(start_byte == 19){      // Check if data is stream packet
-      len = Roomba.read();    // Get the length of the stream packet
-      packet.append<uint8_t>(start_byte);
-      packet.append<uint8_t>(len);
-      for(int i=0; i+1 <len; i++){  // Read the rest of the data
-        data = Roomba.read();
-        packet.append<uint8_t>(data);
+
+
+
+void processRoomba(){
+  if (Roomba.available()>0){
+    uint8_t data_length; //length of the data packets
+    uint8_t start_byte; // first byte of the packet
+    uint8_t checksum; //checksum byte
+    bool flag = false;
+    while (flag == false){ //read data until you get a 19 byte
+      uint8_t start_byte = Roomba.read();
+      if (start_byte == 19){
+        flag = true;
       }
     }
-    txRequest.setAddress64(0x0000000000000000);
-    txRequest.setPayload(packet.head,packet.len());
-    xbee.send(txRequest);
+    data_length = Roomba.read(); //get the length of th packet
+    uint8_t data[data_length]; //define the data packet
+    Roomba.readBytes(data,data_length); //read the data packets
+    checksum = Roomba.read();
+    if (calculateChecksum(data,data_length,checksum)){ //if the checksum calculates properly, transmit
+      int packet_length = (int) data_length;
+      AllocBuffer<100> packet;
+      ZBTxRequest txRequest;
+      packet.append<uint8_t>(start_byte);
+      packet.append<uint8_t>(data_length);
+      for (int i; i<data_length; i++){
+        packet.append<uint8_t>(data[i]);
+      }
+      packet.append<uint8_t>(checksum);
+
+      txRequest.setAddress64(0x0000000000000000);
+      txRequest.setPayload(packet.head,packet.len());
+      xbee.send(txRequest);
+    }
+
+  }
+}
+bool calculateChecksum(uint8_t *data, uint8_t data_length, uint8_t checksum){
+  uint8_t result = data_length;
+  for (int i=0; i<data_length; i++){
+    result += data[i];
+  }
+  result += checksum;
+  result = result & 0xFF;
+  if (result == 0){
+    return true;
+  } else {
+    return false;
   }
 }
