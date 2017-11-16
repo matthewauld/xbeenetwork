@@ -28,7 +28,7 @@ class SensorNet(object):
 
     def process_packet(self, data):
         """Sort packet to proper processing function."""
-        #self._logger.debug("Incoming Packet {}".format(data))
+        self._logger.debug("Incoming Packet {}".format(data))
         if data['id'] == 'at_response':
             self.process_at_response(data)
         elif self.units == {}:

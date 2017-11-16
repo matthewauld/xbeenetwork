@@ -1,8 +1,8 @@
 """Node attached to Roomba."""
 
 import logging
-from .basenode import BaseNode
 import struct
+from .basenode import BaseNode
 from  .opcodes import sensorpackets
 import math
 
@@ -21,12 +21,14 @@ class RoombaNode(BaseNode):
         self.angle = 0                     #radius turned since initiated
         self.location = [(0,0)]
         self.flag = False
+
     def send_data(self, senddata):
         """Simple send data request.
 
         First byte is always length of rest of data.
         Must be in bytes format.
         """
+        self.flag =True
         senddata = bytes([len(senddata)]) + senddata             #append len byte
         print(senddata)
         self.sensornet.XB.send('tx', dest_addr=self.source_addr,
@@ -38,7 +40,6 @@ class RoombaNode(BaseNode):
         ################"""
 
     def process(self, data):
-        self.flag = True
         #self._logger.debug("Incoming Packet {}".format(data))
         """Update the sensor status from any packets that appear."""
         '''if self.validate_checksum(data) is False:
@@ -110,8 +111,8 @@ class RoombaNode(BaseNode):
     def move(self, velocity, distance):  # NOTE: add fucntion to ensure stream is on!
         start_distance = self.distance
         self.drive(velocity, 0)
-        while (start_distance + distance > self.distance):
-            pass
+        while (start_distance + distance >= self.distance):
+            print(self.distance - start_distance)
         self.drive(0,0)
         #self._plot_location(self.distance-start_distance)
         return True
@@ -141,6 +142,9 @@ class RoombaNode(BaseNode):
 
     def start_stream(self):
         self.send_data(bytes([148, 3, 19, 20, 21]))
+
+    def pause_stream(self):
+        self.send_data(bytes([150, 0]))
 
 
 
