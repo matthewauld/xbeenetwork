@@ -29,4 +29,4 @@ class BaseNode(object):
         self.sensornet.XB.send('tx', dest_addr=self.source_addr,
                                dest_addr_long=self.source_addr_long, data=data)
     def process_data(self, data):
-        data.a
+        

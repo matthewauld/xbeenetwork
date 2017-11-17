@@ -87,7 +87,7 @@ void processRxPacket(ZBRxResponse& rx){
     uint8_t data;
     data = b.remove<uint8_t>();
     Roomba.write(data);
-    delay(10);
+
 
   }
 }
