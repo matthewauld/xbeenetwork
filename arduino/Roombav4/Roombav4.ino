@@ -14,7 +14,7 @@ int txPin=11;
 int ddPin=5;
 SoftwareSerial Roomba(rxPin,txPin);
 bool poll = false;   // whether or not to run the poll Function
-uint8_t sensors[]
+uint8_t sensors[20];
 
 //-------------------------------------------------
 void setup(){
@@ -23,7 +23,7 @@ void setup(){
   delay(1);
   xbee.begin(XBeeSerial);    // Start XBee Serial connection
   pinMode(ddPin,OUTPUT);     // Pin for waking up Roomba
-  delay(200)
+  delay(200);
 }
 
 void loop(){
