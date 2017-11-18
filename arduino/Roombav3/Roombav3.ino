@@ -21,7 +21,7 @@ void setup()
 {
 
   Roomba.begin(19200);          //start xbee and roomba
-  XBeeSerial.begin(9600);
+  XBeeSerial.begin(19200);
   delay(1);
 
   xbee.begin(XBeeSerial); //assign serial to xbee
@@ -101,18 +101,15 @@ void processRoomba(){
     uint8_t data_length; //length of the data packets
     uint8_t start_byte; // first byte of the packet
     uint8_t checksum; //checksum byte
-    bool flag = false;
-    while (flag == false){ //read data until you get a 19 byte
-      uint8_t start_byte = Roomba.read();
-      if (start_byte == 19){
-        flag = true;
-      }
-    }
-    data_length = Roomba.read(); //get the length of th packet
-    uint8_t data[data_length]; //define the data packet
-    Roomba.readBytes(data,data_length); //read the data packets
-    checksum = Roomba.read();
-    if (calculateChecksum(data,data_length,checksum)){ //if the checksum calculates properly, transmit
+    uint8_t start_byte = Roomba.read();
+    if (start_byte == 19){
+
+
+
+      data_length = Roomba.read(); //get the length of th packet
+      uint8_t data[data_length]; //define the data packet
+      Roomba.readBytes(data,data_length); //read the data packets
+      checksum = Roomba.read();
       int packet_length = (int) data_length;
       AllocBuffer<100> packet;
       ZBTxRequest txRequest;
@@ -126,8 +123,8 @@ void processRoomba(){
       txRequest.setAddress64(0x0000000000000000);
       txRequest.setPayload(packet.head,packet.len());
       xbee.send(txRequest);
-    }
 
+    }
   }
 }
 bool calculateChecksum(uint8_t *data, uint8_t data_length, uint8_t checksum){
