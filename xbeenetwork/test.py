@@ -11,4 +11,3 @@ logger.setLevel(logging.DEBUG)
 sys.excepthook = my_handler
 x = SensorNet('/dev/cu.usbserial-DN018RGN')
 sleep(2)
-y = x.units['ROUTER1']

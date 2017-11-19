@@ -4,7 +4,6 @@ The base xbee sensor node.
 All other node types must be a modificationof this.
 """
 from datetime import datetime
-from queue import Queue
 
 
 class BaseNode(object):
@@ -28,5 +27,9 @@ class BaseNode(object):
         """Simple send data request."""
         self.sensornet.XB.send('tx', dest_addr=self.source_addr,
                                dest_addr_long=self.source_addr_long, data=data)
-    def process_data(self, data):
-        
+    def send_command(self,command_type, parameter_data):
+        '''Send at command'''
+        self.sensornet.XB.send('remote_at',dest_addr=self.source_addr,
+                               dest_addr_long=self.source_addr_long,
+                               command=command_type,parameter=parameter_data)
+       

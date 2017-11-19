@@ -15,9 +15,8 @@ class SensorNet(object):
         """Start SensorNet."""
         self.packet_queue = queue.PriorityQueue()
         self._logger = logging.getLogger(__name__)
-        self.serial = serial.Serial(port)
-        self.config = yaml.safe_load(open(os.path.dirname(
-            os.path.realpath(__file__)) + '/' + 'config.yml'))
+        self.serial = serial.Serial(port, baudrate=19200)
+        self.config = yaml.safe_load(open(os.path.dirname(os.path.realpath(__file__)) + '/' + 'config.yml'))
         self.XB = xbee.ZigBee(self.serial,
                               shorthand=True,
                               callback=self.process_packet, escaped=True)
@@ -57,9 +56,13 @@ class SensorNet(object):
 
             if node_name in self.config['nodes'].keys():
 
-                node_type = self.config['nodes'][node_name]
+                node_type = self.config['nodes'][node_name]['type']
                 if node_type == 'Roomba':
                     node = RoombaNode(data, self)
+                    self.units[node_name] = node
+                    self._logger.info('Node "{0}" registered as "{1}"'.format(node_name, node_type))
+                elif node_type == 'StandardSensor':
+                    node = StandardSensor(data, self)
                     self.units[node_name] = node
                     self._logger.info('Node "{0}" registered as "{1}"'.format(node_name, node_type))
                 else:
