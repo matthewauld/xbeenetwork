@@ -1,2 +1,4 @@
 nodes:
-  ROUTER1: Roomba
+  ROUTER1:
+    type: StandardSensor
+  
