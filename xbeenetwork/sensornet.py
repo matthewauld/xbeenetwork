@@ -6,14 +6,13 @@ from datetime import datetime
 from nodes import *
 import yaml
 import os
-import queue
+
 
 
 class SensorNet(object):
     """The main xbee network, connected to xbee coordinator."""
     def __init__(self, port):
         """Start SensorNet."""
-        self.packet_queue = queue.PriorityQueue()
         self._logger = logging.getLogger(__name__)
         self.serial = serial.Serial(port, baudrate=19200)
         self.config = yaml.safe_load(open(os.path.dirname(os.path.realpath(__file__)) + '/' + 'config.yml'))
@@ -30,19 +29,33 @@ class SensorNet(object):
         self._logger.debug("Incoming Packet {}".format(data))
         if data['id'] == 'at_response':
             self.process_at_response(data)
-        elif self.units == {}:
-            pass                    # Add fucntion to process data with no node
         elif data['id'] == 'rx':
             self.process_rx(data)
+        elif data['id'] == 'rx_io_data_long_addr':
+            self.process_io(data)
+        elif data['id'] == 'node_id_indicator':
+            self.process_node_id_response(data)
+        elif self.units == {}:
+            pass                    # Add fucntion to process data with no node
+        else:
+            self._logger.debug("Incoming Packet {}".format(data))
 
     def process_at_response(self, data):
         """Function that processes AT repsponse data."""
         if data['command'] == b'ND':
-            self._update_node(data)
+            response = {'source_addr':data['parameter']['source_addr'],'source_addr_long':data['parameter']['source_addr_long'],'parent_address':data['parameter']['parent_address'],'manufacturer':data['parameter']['manufacturer'],'node_identifier':data['parameter']['node_identifier']}
+            self._update_node(response)
+        else:
+            self._logger.debug("Unknown AT Response {}".format(data))
+
+    def process_node_id_response(self, data):
+        """Processes data from notes when they join the PAN."""
+        response = {'source_addr':data['source_addr'],'source_addr_long':data['source_addr_long'],'parent_address':data['parent_source_addr'],'manufacturer':data['manufacturer_id'],'node_identifier':data['node_id']}
+        self._update_node(response)
 
     def _update_node(self, data):
         """Create a node if none exists, or update node."""
-        node_name = data['parameter']['node_identifier'].decode('ascii')
+        node_name = data['node_identifier'].decode('ascii')
         try:
             node = self.units[node_name]
             if node.active:
@@ -72,7 +85,7 @@ class SensorNet(object):
                 self._logger.info('Node "{0}" registered as "BaseNode"'.format(node_name))
 
     def process_rx(self, data):
-        """Add data to the main queue for processing."""
+        """Process incoming RX data using node specific function."""
         node = None
         addr = data['source_addr']
         for key, item in self.units.items():
@@ -83,7 +96,21 @@ class SensorNet(object):
         if node is None:
             self._logger.warning("Packet from unknown source {}".format(data))
         else:
-            node.process(data['rf_data'])
+            node.process_rx(data['rf_data'])
+
+    def process_io(self,data):
+        """Process incoming IO data using node specific functon."""
+        node = None
+        addr = data['source_addr']
+        for key, item in self.units.items():
+            if item.source_addr == addr:
+                node = item
+                node_name = key
+                break
+        if node is None:
+            self._logger.warning("Packet from unknown source {}".format(data))
+        else:
+            node.process_io(data['samples'])
 
 
 class Job(object):

@@ -1,6 +1,6 @@
 """Node attached to Roomba."""
 
-import logging
+
 import struct
 from .basenode import BaseNode
 from  .opcodes import sensorpackets
@@ -16,7 +16,6 @@ class RoombaNode(BaseNode):
         self.mode = MODE_OFF
         self.priority = 2
         self.sensors = {}
-        self._logger = logging.getLogger(__name__)
         self.distance = 0                   #distance travelled since initiated
         self.angle = 0                     #radius turned since initiated
         self.location = [(0,0)]
@@ -39,7 +38,7 @@ class RoombaNode(BaseNode):
         DATA PROCESSING
         ################"""
 
-    def process(self, data):
+    def process_rx(self, data):
         #self._logger.debug("Incoming Packet {}".format(data))
         """Update the sensor status from any packets that appear."""
         '''if self.validate_checksum(data) is False:
