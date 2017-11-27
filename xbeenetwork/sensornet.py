@@ -112,14 +112,11 @@ class SensorNet(object):
         else:
             node.process_io(data['samples'])
 
+    def halt(self):
+        """Closes serial ports and exits."""
+        self.XB.halt()
+        self.serial.close()
+        return True
 
-class Job(object):
-    """Processing packet job to add to queue."""
-
-    def __init__(self, node, data):
-        self.node = node
-        self.data = data
-        self.priority = node.priority
-
-    def __cmp__(self, other):
-        return cmp(self.priority, other.priority)
+    def __del__(self):
+        self.halt()
