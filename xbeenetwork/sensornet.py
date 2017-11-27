@@ -15,12 +15,8 @@ class SensorNet(object):
         """Start SensorNet."""
         self._logger = logging.getLogger(__name__)
         self.serial = serial.Serial(port, baudrate=19200)
-<<<<<<< HEAD
         self.config = yaml.safe_load(open(os.path.dirname(
             os.path.realpath(__file__)) + '/' + 'config.yml'))
-=======
-        self.config = yaml.safe_load(open(os.path.dirname(os.path.realpath(__file__)) + '/' + 'config.yml'))
->>>>>>> dev
         self.XB = xbee.ZigBee(self.serial,
                               shorthand=True,
                               callback=self.process_packet, escaped=True)
