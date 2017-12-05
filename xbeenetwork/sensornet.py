@@ -19,11 +19,13 @@ class SensorNet(object):
             os.path.realpath(__file__)) + '/' + 'config.yml'))
         self.XB = xbee.ZigBee(self.serial,
                               shorthand=True,
-                              callback=self.process_packet, escaped=True)
+                              callback=self.process_packet, error_callback=self.error_callback escaped=True)
         self.units = {}
         self.XB.send('at', command='ND'.encode('ascii'))
         time.sleep(3)
 
+    def error_callback(self, err):
+        self._logger.warning(err)
 
     def process_packet(self, data):
         """Sort packet to proper processing function."""
